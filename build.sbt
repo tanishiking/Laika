@@ -24,14 +24,24 @@ inThisBuild(
     scalaVersion       := versions.scala2_12,
     developers         := List(Developer("jenshalm", "Jens Halm", "", url("http://planet42.org"))),
     tlCiHeaderCheck    := false,
-    tlCiDependencyGraphJob := false,
-    githubWorkflowJavaVersions += JavaSpec.temurin("17"),
+    tlCiDependencyGraphJob     := false,
+    githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("8")),
     githubWorkflowBuildMatrixAdditions ~= { matrix =>
       matrix + ("project" -> (matrix("project") :+ "plugin"))
     },
     githubWorkflowBuildMatrixExclusions ++= {
-      MatrixExclude(Map("project" -> "plugin", "java" -> JavaSpec.temurin("17").render)) ::
-        List("2.13", "3").map(scala => MatrixExclude(Map("project" -> "plugin", "scala" -> scala)))
+      List(
+        MatrixExclude(
+          Map("project" -> "rootJVM", "java" -> JavaSpec.temurin("17").render, "scala" -> "3")
+        ),
+        MatrixExclude(
+          Map("project" -> "plugin", "java" -> JavaSpec.temurin("17").render, "scala" -> "2.12")
+        ),
+        MatrixExclude(
+          Map("project" -> "plugin", "java" -> JavaSpec.temurin("8").render, "scala" -> "3")
+        ),
+        MatrixExclude(Map("project" -> "plugin", "scala" -> "2.13"))
+      )
     },
     githubWorkflowBuild ++= Seq(
       WorkflowStep.Sbt(
@@ -188,22 +198,49 @@ lazy val plugin = project.in(file("sbt"))
   .dependsOn(core.jvm, io, pdf, preview)
   .enablePlugins(SbtPlugin)
   .settings(
-    name               := "laika-sbt",
-    sbtPlugin          := true,
-    crossScalaVersions := Seq(versions.scala2_12),
+    name                          := "laika-sbt",
+    sbtPlugin                     := true,
+    addSbtPlugin("com.github.sbt" % "sbt2-compat" % versions.sbt2Compat),
+    crossScalaVersions            := Seq(versions.scala2_12, versions.scala3Sbt),
+    pluginCrossBuild / sbtVersion := {
+      scalaBinaryVersion.value match {
+        case "2.12" => versions.sbt1
+        case _      => versions.sbt2
+      }
+    },
+    scriptedSbt                   := {
+      scalaBinaryVersion.value match {
+        case "2.12" => versions.sbt1
+        case _      => versions.sbt2
+      }
+    },
+    // sbt 2.x is built with Scala 3.8, which requires Java 17 classfiles.
+    // https://github.com/typelevel/sbt-typelevel/issues/851
+    tlJdkRelease                  := {
+      if (scalaBinaryVersion.value == "3") Some(17)
+      else Some(8)
+    },
     scriptedLaunchOpts ++= Seq(
       "-Xmx1024M",
       "-Dplugin.version=" + version.value,
       "-Duser.language=en",
       "-Duser.country=GB"
     ),
-    scriptedBufferLog  := false,
-    scripted           := scripted.dependsOn(
+    scriptedBufferLog             := false,
+    scripted                      := scripted.dependsOn(
       core.jvm / publishLocal,
       io / publishLocal,
       pdf / publishLocal,
       preview / publishLocal
     ).evaluated,
+    // TODO: Re-enable MiMa for sbt 2 once a previous sbt 2 plugin artifact exists.
+    // The sbt 2 / Scala 3 plugin artifact did not exist in previous Laika releases,
+    // so MiMa cannot compare against a missing baseline.
+    mimaPreviousArtifacts         := {
+      val artifacts = mimaPreviousArtifacts.value
+      if (scalaBinaryVersion.value == "3") Set.empty
+      else artifacts
+    },
     mimaBinaryIssueFilters ++= Seq(
       ProblemFilters.exclude[MissingClassProblem]("laika.sbt.Tasks$OutputFormat"),
       ProblemFilters.exclude[MissingClassProblem]("laika.sbt.Tasks$OutputFormat$"),
