@@ -233,14 +233,7 @@ lazy val plugin = project.in(file("sbt"))
       pdf / publishLocal,
       preview / publishLocal
     ).evaluated,
-    // TODO: Re-enable MiMa for sbt 2 once a previous sbt 2 plugin artifact exists.
-    // The sbt 2 / Scala 3 plugin artifact did not exist in previous Laika releases,
-    // so MiMa cannot compare against a missing baseline.
-    mimaPreviousArtifacts         := {
-      val artifacts = mimaPreviousArtifacts.value
-      if (scalaBinaryVersion.value == "3") Set.empty
-      else artifacts
-    },
+    tlVersionIntroduced := Map("3" -> "1.4.0"),
     mimaBinaryIssueFilters ++= Seq(
       ProblemFilters.exclude[MissingClassProblem]("laika.sbt.Tasks$OutputFormat"),
       ProblemFilters.exclude[MissingClassProblem]("laika.sbt.Tasks$OutputFormat$"),
