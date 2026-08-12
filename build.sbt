@@ -233,7 +233,7 @@ lazy val plugin = project.in(file("sbt"))
       pdf / publishLocal,
       preview / publishLocal
     ).evaluated,
-    tlVersionIntroduced := Map("3" -> "1.4.0"),
+    tlVersionIntroduced           := Map("3" -> "1.4.0"),
     mimaBinaryIssueFilters ++= Seq(
       ProblemFilters.exclude[MissingClassProblem]("laika.sbt.Tasks$OutputFormat"),
       ProblemFilters.exclude[MissingClassProblem]("laika.sbt.Tasks$OutputFormat$"),
