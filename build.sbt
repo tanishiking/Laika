@@ -24,7 +24,7 @@ inThisBuild(
     scalaVersion       := versions.scala2_12,
     developers         := List(Developer("jenshalm", "Jens Halm", "", url("http://planet42.org"))),
     tlCiHeaderCheck    := false,
-    tlCiDependencyGraphJob     := false,
+    tlCiDependencyGraphJob              := false,
     githubWorkflowJavaVersions += JavaSpec.temurin("17"),
     githubWorkflowBuildMatrixAdditions ~= { matrix =>
       matrix + ("project" -> (matrix("project") :+ "plugin"))
