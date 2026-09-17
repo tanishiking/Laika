@@ -37,7 +37,6 @@ inThisBuild(
       ) ++ List(
         MatrixExclude(Map("project" -> "plugin", "scala" -> "2.12", "java" -> java17)),
         MatrixExclude(Map("project" -> "plugin", "scala" -> "3", "java" -> java8)),
-        MatrixExclude(Map("project" -> "rootJVM", "scala" -> "3", "java" -> java17)),
         MatrixExclude(Map("project" -> "plugin", "scala" -> "2.13"))
       )
     },
