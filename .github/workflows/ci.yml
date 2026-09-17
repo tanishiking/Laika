@@ -29,24 +29,19 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         scala: [2.12, 2.13, 3]
-        java: [temurin@17, temurin@8]
+        java: [temurin@8, temurin@17]
         project: [rootJS, rootJVM, plugin]
         exclude:
           - scala: 2.13
-            java: temurin@8
-          - scala: 3
-            java: temurin@8
+            java: temurin@17
           - project: rootJS
-            java: temurin@8
-          - project: rootJVM
             java: temurin@17
-            scala: 3
           - project: plugin
-            java: temurin@17
             scala: 2.12
-          - project: plugin
-            java: temurin@8
+            java: temurin@17
+          - project: rootJVM
             scala: 3
+            java: temurin@17
           - project: plugin
             scala: 2.13
     runs-on: ${{ matrix.os }}
@@ -59,19 +54,6 @@ jobs:
 
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
-
-      - name: Setup Java (temurin@17)
-        id: setup-java-temurin-17
-        if: matrix.java == 'temurin@17'
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
-          cache: sbt
-
-      - name: sbt update
-        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
-        run: sbt +update
 
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
@@ -86,11 +68,24 @@ jobs:
         if: matrix.java == 'temurin@8' && steps.setup-java-temurin-8.outputs.cache-hit == 'false'
         run: sbt +update
 
+      - name: Setup Java (temurin@17)
+        id: setup-java-temurin-17
+        if: matrix.java == 'temurin@17'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
+        run: sbt +update
+
       - name: Check that workflows are up to date
         run: sbt githubWorkflowCheck
 
       - name: Check formatting
-        if: matrix.java == 'temurin@17' && matrix.os == 'ubuntu-22.04'
+        if: matrix.java == 'temurin@8' && matrix.os == 'ubuntu-22.04'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' scalafmtCheckAll 'project /' scalafmtSbtCheck
 
       - name: scalaJSLink
@@ -101,11 +96,11 @@ jobs:
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' test
 
       - name: Check binary compatibility
-        if: matrix.java == 'temurin@17' && matrix.os == 'ubuntu-22.04'
+        if: matrix.java == 'temurin@8' && matrix.os == 'ubuntu-22.04'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' mimaReportBinaryIssues
 
       - name: Generate API documentation
-        if: matrix.java == 'temurin@17' && matrix.os == 'ubuntu-22.04'
+        if: matrix.java == 'temurin@8' && matrix.os == 'ubuntu-22.04'
         run: sbt 'project ${{ matrix.project }}' '++ ${{ matrix.scala }}' doc
 
       - name: Build manual
@@ -138,7 +133,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-22.04]
-        java: [temurin@17]
+        java: [temurin@8]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout current branch (full)
@@ -148,19 +143,6 @@ jobs:
 
       - name: Setup sbt
         uses: sbt/setup-sbt@v1
-
-      - name: Setup Java (temurin@17)
-        id: setup-java-temurin-17
-        if: matrix.java == 'temurin@17'
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 17
-          cache: sbt
-
-      - name: sbt update
-        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
-        run: sbt +update
 
       - name: Setup Java (temurin@8)
         id: setup-java-temurin-8
@@ -173,6 +155,19 @@ jobs:
 
       - name: sbt update
         if: matrix.java == 'temurin@8' && steps.setup-java-temurin-8.outputs.cache-hit == 'false'
+        run: sbt +update
+
+      - name: Setup Java (temurin@17)
+        id: setup-java-temurin-17
+        if: matrix.java == 'temurin@17'
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+
+      - name: sbt update
+        if: matrix.java == 'temurin@17' && steps.setup-java-temurin-17.outputs.cache-hit == 'false'
         run: sbt +update
 
       - name: Download target directories (2.12, rootJS)
@@ -191,6 +186,16 @@ jobs:
           name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-rootJVM
 
       - name: Inflate target directories (2.12, rootJVM)
+        run: |
+          tar xf targets.tar
+          rm targets.tar
+
+      - name: Download target directories (2.12, plugin)
+        uses: actions/download-artifact@v6
+        with:
+          name: target-${{ matrix.os }}-${{ matrix.java }}-2.12-plugin
+
+      - name: Inflate target directories (2.12, plugin)
         run: |
           tar xf targets.tar
           rm targets.tar
@@ -221,6 +226,16 @@ jobs:
           name: target-${{ matrix.os }}-${{ matrix.java }}-3-rootJS
 
       - name: Inflate target directories (3, rootJS)
+        run: |
+          tar xf targets.tar
+          rm targets.tar
+
+      - name: Download target directories (3, rootJVM)
+        uses: actions/download-artifact@v6
+        with:
+          name: target-${{ matrix.os }}-${{ matrix.java }}-3-rootJVM
+
+      - name: Inflate target directories (3, rootJVM)
         run: |
           tar xf targets.tar
           rm targets.tar

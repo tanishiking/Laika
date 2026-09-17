@@ -25,21 +25,17 @@ inThisBuild(
     developers         := List(Developer("jenshalm", "Jens Halm", "", url("http://planet42.org"))),
     tlCiHeaderCheck    := false,
     tlCiDependencyGraphJob     := false,
-    githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"), JavaSpec.temurin("8")),
+    githubWorkflowJavaVersions += JavaSpec.temurin("17"),
     githubWorkflowBuildMatrixAdditions ~= { matrix =>
       matrix + ("project" -> (matrix("project") :+ "plugin"))
     },
-    githubWorkflowBuildMatrixExclusions ++= {
-      List(
-        MatrixExclude(
-          Map("project" -> "rootJVM", "java" -> JavaSpec.temurin("17").render, "scala" -> "3")
-        ),
-        MatrixExclude(
-          Map("project" -> "plugin", "java" -> JavaSpec.temurin("17").render, "scala" -> "2.12")
-        ),
-        MatrixExclude(
-          Map("project" -> "plugin", "java" -> JavaSpec.temurin("8").render, "scala" -> "3")
-        ),
+    githubWorkflowBuildMatrixExclusions := {
+      val java17 = JavaSpec.temurin("17").render
+      githubWorkflowBuildMatrixExclusions.value.filterNot(
+        _.matching == Map("scala" -> "3", "java" -> java17)
+      ) ++ List(
+        MatrixExclude(Map("project" -> "plugin", "scala" -> "2.12", "java" -> java17)),
+        MatrixExclude(Map("project" -> "rootJVM", "scala" -> "3", "java" -> java17)),
         MatrixExclude(Map("project" -> "plugin", "scala" -> "2.13"))
       )
     },
