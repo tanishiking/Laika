@@ -23,7 +23,6 @@ import laika.io.config.RendererConfig
 import laika.theme.ThemeProvider
 import sbt.Keys.*
 import sbt.*
-import scala.annotation.nowarn
 
 /** Plugin that adapts the features of the Laika library for use from within sbt.
   *
@@ -156,7 +155,7 @@ object LaikaPlugin extends AutoPlugin {
 
   import autoImport._
 
-  @nowarn("msg=unused import")
+  @org.typelevel.scalaccompat.annotation.nowarn3("msg=unused import")
   override def projectSettings: Seq[Setting[?]] = {
     import sbtcompat.PluginCompat.*
 

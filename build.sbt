@@ -205,12 +205,6 @@ lazy val plugin = project.in(file("sbt"))
         case _      => versions.sbt2
       }
     },
-    scriptedSbt                   := {
-      scalaBinaryVersion.value match {
-        case "2.12" => versions.sbt1
-        case _      => versions.sbt2
-      }
-    },
     // sbt 2.x is built with Scala 3.8, which requires Java 17 classfiles.
     // https://github.com/typelevel/sbt-typelevel/issues/851
     tlJdkRelease                  := {
